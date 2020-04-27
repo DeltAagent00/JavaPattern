@@ -1,7 +1,11 @@
 package com.homedev;
 
+import com.homedev.mvp.view.ICache;
+import com.homedev.cache.SimpleCacheImpl;
 import com.homedev.mvp.model.entity.Author;
 import com.homedev.mvp.model.entity.Book;
+import com.homedev.mvp.view.IStorage;
+import com.homedev.storage.MapStorageImpl;
 
 public class Main {
     public static void main(String[] args) {
@@ -35,5 +39,13 @@ public class Main {
         System.out.println(author1);
         System.out.println(author2);
         System.out.println(book);
+
+        final ICache cache = new SimpleCacheImpl();
+        final IStorage storage = new MapStorageImpl(cache);
+
+        storage.saveOrUpdateBook(book);
+        final Book savedBook = storage.getBookById(book.getId());
+
+        System.out.println(savedBook);
     }
 }
