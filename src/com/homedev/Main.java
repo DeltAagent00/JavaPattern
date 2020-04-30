@@ -1,7 +1,14 @@
 package com.homedev;
 
+import com.homedev.mvp.view.ICache;
+import com.homedev.cache.SimpleCacheImpl;
 import com.homedev.mvp.model.entity.Author;
 import com.homedev.mvp.model.entity.Book;
+import com.homedev.mvp.view.IObserverSavedBook;
+import com.homedev.mvp.view.IStorage;
+import com.homedev.mvp.view.ISubscribeSavedBookListener;
+import com.homedev.observable.ObservableSavedBookImpl;
+import com.homedev.storage.MapStorageImpl;
 
 public class Main {
     public static void main(String[] args) {
@@ -35,5 +42,20 @@ public class Main {
         System.out.println(author1);
         System.out.println(author2);
         System.out.println(book);
+
+        final ICache cache = new SimpleCacheImpl();
+        final IObserverSavedBook observableSavedBook = new ObservableSavedBookImpl();
+        final ISubscribeSavedBookListener iSubscribeSavedBookListener = book1 ->
+                System.out.println("subscribe call: " + book1);
+        final IStorage storage = new MapStorageImpl(cache, observableSavedBook);
+
+        observableSavedBook.addSubscribe(iSubscribeSavedBookListener);
+
+        storage.saveOrUpdateBook(book);
+        final Book savedBook = storage.getBookById(book.getId());
+
+        System.out.println(savedBook);
+
+        observableSavedBook.removeSubscribe(iSubscribeSavedBookListener);
     }
 }
