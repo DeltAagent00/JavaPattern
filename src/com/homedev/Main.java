@@ -1,5 +1,11 @@
 package com.homedev;
 
+import com.homedev.db.AuthorDBImpl;
+import com.homedev.db.DbObjects;
+import com.homedev.db.JDBCConnectionImpl;
+import com.homedev.db.Sequence;
+import com.homedev.mvp.IDBConnection;
+import com.homedev.mvp.model.IAuthorDB;
 import com.homedev.mvp.view.ICache;
 import com.homedev.cache.SimpleCacheImpl;
 import com.homedev.mvp.model.entity.Author;
@@ -10,10 +16,19 @@ import com.homedev.mvp.view.ISubscribeSavedBookListener;
 import com.homedev.observable.ObservableSavedBookImpl;
 import com.homedev.storage.MapStorageImpl;
 
+import java.sql.Connection;
+import java.util.List;
+
 public class Main {
     public static void main(String[] args) {
+        final IDBConnection DB = new JDBCConnectionImpl();
+        final IAuthorDB dataMapper = new AuthorDBImpl();
+
+        DbObjects.createObjects(DB.getConnection());
+
+
         final Author author1 = new Author.Builder()
-                .setId(1)
+                .setId(Sequence.nextVal(DB.getConnection()))
                 .setName("name 1")
                 .setLastname("last name 1")
                 .setSurname("surname 1")
@@ -21,7 +36,7 @@ public class Main {
                 .create();
 
         final Author author2 = new Author.Builder()
-                .setId(2)
+                .setId(Sequence.nextVal(DB.getConnection()))
                 .setName("name 2")
                 .setLastname("last name 2")
                 .setSurname("surname 2")
@@ -57,5 +72,40 @@ public class Main {
         System.out.println(savedBook);
 
         observableSavedBook.removeSubscribe(iSubscribeSavedBookListener);
+
+
+
+        dataMapper.insert(DB.getConnection(), author1);
+        dataMapper.insert(DB.getConnection(), author2);
+
+        final List<Author> allAuthors = dataMapper.getAll(DB.getConnection());
+
+        System.out.println("--- All Authors ---");
+        for(Author author : allAuthors) {
+            System.out.println(author);
+        }
+        System.out.println("------");
+
+        final Author author_1 = dataMapper.getById(DB.getConnection(), 1);
+        System.out.println("--- Author by id = '1' ---");
+        System.out.println(author_1);
+        System.out.println("------");
+
+        final List<Author> authors = dataMapper.getByName(DB.getConnection(), "name 1");
+        System.out.println("--- All Authors by name = 'name 1' ---");
+        for(Author author : allAuthors) {
+            System.out.println(author);
+        }
+        System.out.println("------");
+
+        dataMapper.delete(DB.getConnection(), author1);
+        System.out.println("--- All Authors after delete ---");
+        for(Author author : allAuthors) {
+            System.out.println(author);
+        }
+        System.out.println("------");
+
+        DbObjects.dropObjects(DB.getConnection());
+        DB.closeConnection();
     }
 }
